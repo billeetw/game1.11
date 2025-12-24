@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>命運雷達啟動計畫：高難度提問特訓</title>
+    <style>
+        :root {
+            --bg-color: #0a0f18;
+            --text-color: #e0e6ed;
+            --accent-green: #00ff9d;
+            --accent-red: #ff3860;
+            --accent-gold: #d4af37;
+            --radar-bg: #0c1624;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at center, #1a2a3d 0%, #0a0f18 70%);
+        }
+
+        #game-container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(16, 24, 39, 0.8);
+            border: 1px solid #2a3a50;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        /* Radar Visuals */
+        .radar-box {
+            width: 150px;
+            height: 150px;
+            background: var(--radar-bg);
+            border-radius: 50%;
+            border: 2px solid var(--accent-green);
+            position: relative;
+            margin: 0 auto 20px;
+            overflow: hidden;
+            box-shadow: 0 0 15px var(--accent-green), inset 0 0 20px rgba(0, 255, 157, 0.2);
+        }
+
+        .radar-scanner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 0deg, rgba(0, 255, 157, 0.4) 60deg, transparent 61deg);
+            animation: scan 4s linear infinite;
+            z-index: 1;
+        }
+
+        .radar-grid {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at center, transparent 60%, var(--accent-green) 61%, transparent 62%),
+                radial-gradient(circle at center, transparent 30%, var(--accent-green) 31%, transparent 32%),
+                linear-gradient(0deg, transparent 49%, var(--accent-green) 50%, transparent 51%),
+                linear-gradient(90deg, transparent 49%, var(--accent-green) 50%, transparent 51%);
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        /* The Noise Layer */
+        .radar-noise {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E");
+            z-index: 2;
+            mix-blend-mode: overlay;
+            transition: opacity 0.5s ease;
+            opacity: 1;
+        }
+
+        @keyframes scan {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .master-intro {
+            text-align: center;
+            font-style: italic;
+            color: #a0aec0;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #2a3a50;
+            padding-bottom: 15px;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            height: 8px;
+            background-color: #1a2a3d;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-green), #00c3ff);
+            transition: width 0.5s ease;
+        }
+
+        /* Question Area */
+        .question-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        #question-text {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(42, 58, 80, 0.5);
+            border: 1px solid var(--accent-green);
+            color: var(--text-color);
+            padding: 15px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background: rgba(0, 255, 157, 0.1);
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.2);
+        }
+
+        .option-btn.correct {
+            background: rgba(0, 255, 157, 0.2) !important;
+            border-color: var(--accent-green) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 157, 0.4);
+        }
+
+        .option-btn.incorrect {
+            background: rgba(255, 56, 96, 0.2) !important;
+            border-color: var(--accent-red) !important;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        #feedback-area {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            background: rgba(12, 22, 36, 0.8);
+            border-left: 4px solid var(--accent-gold);
+            display: none;
+        }
+
+        .feedback-title {
+            font-weight: bold;
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .feedback-title::before {
+            content: '👴🏼';
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+
+        #next-btn, #restart-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: linear-gradient(90deg, var(--accent-gold), #f5d76e);
+            color: #0a0f18;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: none;
+            width: 100%;
+        }
+
+        #next-btn:hover, #restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Results Page */
+        #results-area {
+            text-align: center;
+            display: none;
+        }
+
+        .final-score {
+            font-size: 3rem;
+            color: var(--accent-green);
+            margin: 20px 0;
+            text-shadow: 0 0 20px rgba(0, 255, 157, 0.5);
+        }
+
+        .final-title {
+            font-size: 1.5rem;
+            color: var(--accent-gold);
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        #final-comment {
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        /* CTA Section Style */
+        .cta-container {
+            margin: 30px 0;
+            padding: 25px;
+            background: rgba(0, 255, 157, 0.05);
+            border: 1px solid var(--accent-green);
+            border-radius: 12px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-green);
+        }
+
+        .cta-container h3 {
+            color: var(--accent-green);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .cta-container p {
+            font-size: 1rem;
+            color: #e0e6ed;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .cta-button {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: var(--accent-green);
+            color: #0a0f18;
+            padding: 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 20px;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            box-shadow: 0 4px 15px rgba(0, 255, 157, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            background: #33ffb0;
+            box-shadow: 0 6px 20px rgba(0, 255, 157, 0.5);
+        }
+
+        /* Responsive */
+        @media (min-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .option-btn {
+                 height: 100%;
+                 display: flex;
+                 align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="radar-box">
+        <div class="radar-grid"></div>
+        <div class="radar-scanner"></div>
+        <div class="radar-noise" id="radar-noise"></div>
+    </div>
+    <h1>命運雷達啟動計畫：高難度提問特訓</h1>
+    <p class="master-intro">「你的命明明好好的，別再用蠢問題把它搞爛了。讓我看看你的雷達壞到什麼程度。」——易經老師</p>
+
+    <div id="quiz-area">
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="question-meta">
+            <span id="stage-indicator">階段一：雷達診斷</span>
+            <span id="question-count">1 / 20</span>
+        </div>
+        <div id="question-text">題目載入中...</div>
+        <div class="options-grid" id="options-container">
+            </div>
+
+        <div id="feedback-area">
+            <div class="feedback-title" id="feedback-status">老師點評：</div>
+            <div id="feedback-text"></div>
+            <button id="next-btn">下一題</button>
+        </div>
+    </div>
+
+    <div id="results-area">
+        <h2>特訓結束！雷達狀態報告</h2>
+        <div class="final-score" id="final-score"></div>
+        <div class="final-title" id="final-title"></div>
+        <div id="final-comment"></div>
+
+        <div class="cta-container">
+            <h3>別讓好不容易開啟的雷達，明天又關上了。</h3>
+            <p>今天的文章只是「開機」。要在充滿雜訊的市場裡長期活下來，你需要的是持續的<strong>「校準」</strong>。</p>
+            <p>留下你的 Email，接收李伯彥老師為你準備的<strong>【生涯成長】</strong>訊息。</p>
+            <a href="https://forms.gle/opSzQoYER39Yw1QWA" target="_blank" class="cta-button">👉 輸入 Email，保持雷達開啟</a>
+        </div>
+
+        <button id="restart-btn">重新啟動雷達 (再測一次)</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        // --- 階段一：辨識陷阱 ---
+        {
+            question: "Q1. 小陳問：「現在景氣這麼差，我是不是不應該創業？」這個提問犯了什麼最大的錯誤，導致它依然停留在 Level 1？",
+            options: [
+                "他沒有提供自己的資金狀況。",
+                "他用「外部環境（景氣差）」來掩蓋自己不想承擔決策責任的事實，本質上還是在問是非題。",
+                "他沒有列出創業以外的選項。",
+                "他應該問「我該去哪裡創業」才對。"
+            ],
+            correct: 1,
+            feedback: "答對了。許多人會加上一個環境前提（如景氣差、AI很紅），假裝自己有在思考，但核心問句依然是「我是不是該...」，這就是想找人背書的伸手牌。"
+        },
+        {
+            question: "Q2. 為了升級提問，阿強提供了資訊：「老師，我有500萬閒錢，想投資房地產，但我怕買在高點套牢，你可以推薦我哪區比較安全嗎？」請問阿強現在處於什麼狀態？",
+            options: [
+                "已經到達 Level 3，因為他有明確目標。",
+                "典型的 Level 2：提供了座標（資金、擔憂），但依然把最終選擇權（推薦哪區）交給別人。",
+                "這已經是 Level 4 了，因為他看到了風險。",
+                "還是 Level 1，因為他還是再問問題。"
+            ],
+            correct: 1,
+            feedback: "精準。他給了座標，比純伸手牌好，但他最後那句「推薦我哪區」，立刻暴露了他還沒準備好自己做比較和選擇，雷達只開了一半。"
+        },
+        {
+            question: "Q3. 下列哪一個提問是真的達到了 Level 3（比較選項），而不是偽裝的 Level 2？",
+            options: [
+                "「A方案和B方案，老師你覺得哪個比較好？」",
+                "「如果我選A方案，我會不會後悔？」",
+                "「考慮到我需要要在三年內變現的需求，A方案（高成長）與B方案（穩健配息）在流動性風險上有什麼具體差異？」",
+                "「我現在有A和B兩個選擇，請告訴我怎麼選。」"
+            ],
+            correct: 2,
+            feedback: "Bingo！Level 3 的關鍵不是「有選項」就好，而是能夠提出具體的比較維度（如流動性風險）並結合自身限制（三年變現）。"
+        },
+        {
+            question: "Q4. 為什麼文章說 Level 1 的模糊提問，走叉路的機率是 100%？最核心的原因是什麼？",
+            options: [
+                "因為回答的人可能不夠專業。",
+                "因為你留下的資訊空白，會被對方的偏見、貪念或動機填滿，他會帶你去對他有利的地方。",
+                "因為你自己的運氣不好。",
+                "因為是非題通常只有 50% 的機率對。"
+            ],
+            correct: 1,
+            feedback: "這是最殘酷的真相。在商業世界裡，模糊就是給別人操縱你的空間。你的雷達沒開，就是等著被黑心導遊帶去購物站。"
+        },
+        {
+            question: "Q5. 關於 Level 3 (問選項) 和 Level 2 (有座標) 的關鍵區別，下列描述何者最準確？",
+            options: [
+                "Level 2 字數比較多，Level 3 字數比較少。",
+                "Level 2 依然在尋求單一答案或推薦；Level 3 則是主動提出了多重路徑，並尋求客觀的比較分析。",
+                "Level 3 的人比較聰明，Level 2 的人比較笨。",
+                "Level 2 問的是現在，Level 3 問的是未來。"
+            ],
+            correct: 1,
+            feedback: "沒錯。Level 2 是「我站在這，請拉我一把」；Level 3 是「我看到兩條路，請給我地圖」。主動性的差異是關鍵。"
+        },
+
+        // --- 階段二：結構重組 ---
+        {
+            question: "Q6. 文章約法三章禁止問「該不該」。如果你心裡真的很想問「我該不該離職？」，要強迫自己轉換成哪種結構才合格？",
+            options: [
+                "「離職好，還是不離職好？」",
+                "「老師你覺得我離職成功的機率有多少？」",
+                "「為了達到 [特定職涯目標]，在 [目前經濟壓力] 的限制下，離職與留下這兩條路，各自最大的隱藏成本是什麼？」",
+                "「如果我不離職，我未來會怎樣？」"
+            ],
+            correct: 2,
+            feedback: "很好，記住這個公式：目標 + 限制 + 路徑比較 + 風險評估。這能強迫你的大腦從「賭博模式」切換到「戰略模式」。"
+        },
+        {
+            question: "Q7. 小美想問感情問題：「他是不是不愛我了？」這是一個糟糕的 Level 1。若要用「目標導向」的結構改寫，下列哪個最好？",
+            options: [
+                "「他最近都不回訊息，是不是有別人了？」",
+                "「我要怎麼做才能讓他重新愛上我？」",
+                "「如果我的目標是建立一段『有安全感的長期關係』，面對目前『溝通斷層』的現狀，我有哪幾種具體的行動方案可以改善？」",
+                "「我們是不是不適合？」"
+            ],
+            correct: 2,
+            feedback: "非常棒。將焦點從猜測對方的想法（不可控），轉移到自己的關係目標和具體行動方案（可控）。這才是掌握命運的問法。"
+        },
+        {
+            question: "Q8. 當你試圖把問題加入「座標」時，下列哪種資訊對於決策者來說最沒有價值，反而可能是雜訊？",
+            options: [
+                "你可承受的最大損失金額（底線）。",
+                "你希望達成目標的具體時間表（時間軸）。",
+                "你隔壁鄰居阿姨對這件事的看法（他人意見）。",
+                "你目前擁有的核心資源與技能（籌碼）。"
+            ],
+            correct: 2,
+            feedback: "沒錯。座標必須是關於「你」的客觀事實（籌碼、底線、時間）。無關緊要的他人意見只會干擾雷達的訊號。"
+        },
+        {
+            question: "Q9. 為什麼把「能不能成功」這種問題改成「為了定義我心中的成功，我缺乏哪些關鍵能力」會讓人生好三倍？",
+            options: [
+                "因為這樣問比較謙虛。",
+                "因為前者是在向命運乞討答案，後者是把模糊的焦慮轉化為可執行的行動清單。",
+                "因為老師比較喜歡回答這種問題。",
+                "因為這樣問可以展現你的上進心。"
+            ],
+            correct: 1,
+            feedback: "正是如此。提問的目的是為了引發行動，而不是尋求安慰。把焦慮拆解成行動清單，命運自然就會改變。"
+        },
+        {
+            question: "Q10. 實戰題：你想買一支飆漲中的股票。你忍住了問「現在買來得及嗎？」。你應該問什麼來展現你的 Level 3 思維？",
+            options: [
+                "「這支股票還會漲多久？」",
+                "「如果我現在進場，設定 10% 停損點；與我等待回檔 20% 再進場相比，這兩種策略在未來半年的風險報酬比有何不同？」",
+                "「有沒有內線消息說主力什麼時候要跑？」",
+                "「如果不買這支，還有哪支會飆？」"
+            ],
+            correct: 1,
+            feedback: "專業。你提出了兩種具體的交易策略，並設定了風控參數，請求比較分析。騙子看到這種問題都會繞道走。"
+        },
+
+        // --- 階段三：直擊病灶 ---
+        {
+            question: "Q11. 關於「五個為什麼」的奪命追殺技巧，最大的陷阱是什麼？導致很多人問了五次卻還是找不到核心問題？",
+            options: [
+                "問得太快，沒有思考。",
+                "問到第三個就問不下去了。",
+                "每次問「為什麼」，答案都是在怪罪外部環境（怪老闆、怪景氣），而不是往自己內心深挖。",
+                "沒有把答案寫下來。"
+            ],
+            correct: 2,
+            feedback: "太犀利了。如果你的答案一直指向外面（因為他很爛、因為運氣差），你問一百次也沒用。追問必須像手術刀一樣指向自己的內在動機與恐懼。"
+        },
+        {
+            question: "Q12. 某人一直想換更大的房子，他對自己用了「五個為什麼」，發現最終原因是「不想在親戚面前抬不起頭」。這時，真正的 Level 4 問題(QBQ)應該是什麼？",
+            options: [
+                "「哪一區的房子最能讓親戚羨慕？」",
+                "「我是不是該處理我內在『價值感低落』與『需要他人認同』的課題，而不是透過買房這種高槓桿方式來偽裝？」",
+                "「我是不是該斷絕跟那些勢利眼親戚的來往？」",
+                "「如何快速賺到買大房子的頭期款？」"
+            ],
+            correct: 1,
+            feedback: "Bravo！這就是 QBQ 的威力。你發現問題的本質根本不是房地產，而是心理學。解決了核心的價值感問題，換不換房就只是個普通選項了。"
+        },
+        {
+            question: "Q13. 如果你發現自己總是反覆遇到同一種爛人（渣男/渣女/爛老闆），一個 Level 4 的覺醒者會怎麼問自己？",
+            options: [
+                "「為什麼我運氣這麼差，總是遇到這種人？」(受害者心態)",
+                "「我是不是身上有某種『慣性模式』或『未被滿足的需求』，無意識地吸引或容忍了這類人進入我的生命？」",
+                "「現在社會上的人是不是都壞掉了？」(歸咎環境)",
+                "「我要去哪裡拜拜才能斬爛桃花？」(尋求外力)"
+            ],
+            correct: 1,
+            feedback: "很痛，但很真實。Level 4 承認自己是生命經驗的共同創造者。唯有看見自己的模式，才能打破輪迴。"
+        },
+        {
+            question: "Q14. QBQ (問題背後的問題) 的核心精神是什麼？",
+            options: [
+                "問出一個讓對方答不出來的深奧問題。",
+                "透過層層剝洋蔥，發現表象問題底下的真實需求、恐懼或限制性信念。",
+                "把一個問題拆解成五個小問題。",
+                "用心理學術語來包裝問題。"
+            ],
+            correct: 1,
+            feedback: "沒錯，就是剝洋蔥。通常你會發現，你以為的錢的問題，其實是安全感問題；你以為的感情問題，其實是自我價值問題。"
+        },
+        {
+            question: "Q15. 當你能夠穩定地問出 Level 4 的問題時，為什麼騙子對你趨近於無效？",
+            options: [
+                "因為騙子聽不懂你在說什麼。",
+                "因為你已經看穿了自己的弱點和痛點，騙子無法再利用你的恐懼和貪婪來操縱你。",
+                "因為你會變得很有氣場，嚇退騙子。",
+                "因為你不再需要跟人對話了。"
+            ],
+            correct: 1,
+            feedback: "正是如此。騙子利用的就是你對自己的不了解。當你比誰都懂自己的痛點在哪，你就擁有了最強的心理防禦機制。"
+        },
+
+        // --- 階段四：戰略設計 ---
+        {
+            question: "Q16. 到了 Level 5「用問題設計人生」，提問的視角發生了什麼根本性的轉變？",
+            options: [
+                "從問「現在該怎麼辦」轉變成問「過去是誰害了我」。",
+                "從被動地應對單一事件（如換屋、離職），轉變為主動地從長遠願景倒推現在的系統性配置。",
+                "問題變得非常複雜，只有專家才聽得懂。",
+                "不再問問題，而是直接下指令。"
+            ],
+            correct: 1,
+            feedback: "這就是戰略家與救火隊的差別。Level 5 不再被眼前的緊急事件牽著鼻子走，而是站在未來十年看現在，重新佈局。"
+        },
+        {
+            question: "Q17. 一個面臨中年危機的人，如果用 Level 5 的方式提問，下列哪個最像？",
+            options: [
+                "「我都 45 歲了還一事無成，我是不是完了？」",
+                "「如果我希望 55 歲時能擁有『不為錢工作』的自由狀態，我現在需要建立哪三種關鍵的『被動收入管道』？目前的資源該如何重新分配到這些管道上？」",
+                "「有沒有什麼快速考取公職的方法可以讓我安穩退休？」",
+                "「我該不該去唸個 EMBA 來拓展人脈？」"
+            ],
+            correct: 1,
+            feedback: "完美。這就是設計。有終局圖像（55歲的狀態），有關鍵要素（被動收入管道），有資源配置行動（重新分配）。這是把自己的人生當成一家公司在經營。"
+        },
+        {
+            question: "Q18. 文章說「在你的世界裡，沒有人比你更懂你，也沒有任何存在能在你的世界裡大於你」。這句話在 Level 5 的脈絡下是什麼意思？",
+            options: [
+                "你要變得非常自大，不聽別人的意見。",
+                "你必須意識到，所有的導師、專家、算命師都只是你的顧問，最終的決策權和責任必須百分之百回到你手上。",
+                "你已經得道成仙了。",
+                "這世界只有你是真實的，其他人都是 NPC。"
+            ],
+            correct: 1,
+            feedback: "這就是「拿回人生主導權」的終極奧義。你可以參考一萬個人的意見，但最後拍板和買單的，永遠是你自己。"
+        },
+        {
+            question: "Q19. 為什麼老師說「有資源的人只會跟懂思考的人在一起」，這跟提問等級有什麼關係？",
+            options: [
+                "因為懂思考的人比較會拍馬屁。",
+                "因為 Level 1-2 的提問者通常是「能量索取者」（只想討答案），而高等級提問者是「價值創造者」（能交流觀點），強者只願意跟後者交換資源。",
+                "因為這是一個勢利眼的世界。",
+                "因為聰明人喜歡互相出難題考對方。"
+            ],
+            correct: 1,
+            feedback: "真相了。你的提問方式暴露了你的思維層級。如果你總是當伸手牌，高品質的人脈會對你避之唯恐不及；反之，高品質的提問是吸引貴人的磁鐵。"
+        },
+        {
+            question: "Q20. 遊戲最後一題：你認為修復「命運雷達」最關鍵的一步行動是什麼？",
+            options: [
+                "把這篇文章背下來。",
+                "每天花錢找老師諮詢。",
+                "停止向外尋求廉價的答案，開始痛苦但誠實地向內自我提問與改寫。",
+                "去廟裡拜拜求籤。"
+            ],
+            correct: 2,
+            feedback: "恭喜你通關。這是一條最難走的路，但也是唯一的路。向內求，而不是向外討。你的雷達已經啟動，接下來的路，握好你的舵盤吧！"
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let radarHealth = 100;
+
+    const questionTextBtn = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const feedbackArea = document.getElementById('feedback-area');
+    const feedbackText = document.getElementById('feedback-text');
+    const nextBtn = document.getElementById('next-btn');
+    const quizArea = document.getElementById('quiz-area');
+    const resultsArea = document.getElementById('results-area');
+    const finalScoreElement = document.getElementById('final-score');
+    const finalTitleElement = document.getElementById('final-title');
+    const finalCommentElement = document.getElementById('final-comment');
+    const restartBtn = document.getElementById('restart-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const questionCountSpan = document.getElementById('question-count');
+    const stageIndicatorSpan = document.getElementById('stage-indicator');
+    const radarNoise = document.getElementById('radar-noise');
+
+    function loadQuestion() {
+        resetState();
+        const currentQuestionData = quizData[currentQuestionIndex];
+        questionTextBtn.textContent = currentQuestionData.question;
+        questionCountSpan.textContent = `${currentQuestionIndex + 1} / ${quizData.length}`;
+        
+        let stageText = "";
+        if(currentQuestionIndex < 5) stageText = "階段一：辨識陷阱";
+        else if(currentQuestionIndex < 10) stageText = "階段二：結構重組";
+        else if(currentQuestionIndex < 15) stageText = "階段三：直擊病灶";
+        else stageText = "階段四：戰略設計";
+        stageIndicatorSpan.textContent = stageText;
+
+        currentQuestionData.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.textContent = option;
+            button.classList.add('option-btn');
+            button.addEventListener('click', () => selectOption(index));
+            optionsContainer.appendChild(button);
+        });
+
+        updateProgressBar();
+    }
+
+    function selectOption(selectedIndex) {
+        const currentQuestionData = quizData[currentQuestionIndex];
+        const optionButtons = document.querySelectorAll('.option-btn');
+        
+        optionButtons.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === currentQuestionData.correct) {
+            score++;
+            optionButtons[selectedIndex].classList.add('correct');
+            feedbackText.innerHTML = `<span style="color: var(--accent-green); font-weight:bold;">【漂亮！】</span> ${currentQuestionData.feedback}`;
+            radarHealth -= (100 / quizData.length);
+            radarNoise.style.opacity = Math.max(0, radarHealth / 100);
+        } else {
+            optionButtons[selectedIndex].classList.add('incorrect');
+            optionButtons[currentQuestionData.correct].classList.add('correct');
+            feedbackText.innerHTML = `<span style="color: var(--accent-red); font-weight:bold;">【搞錯了！】</span> ${currentQuestionData.feedback}`;
+        }
+
+        feedbackArea.style.display = 'block';
+        nextBtn.style.display = 'block';
+    }
+
+    function resetState() {
+        optionsContainer.innerHTML = '';
+        feedbackArea.style.display = 'none';
+        nextBtn.style.display = 'none';
+        feedbackText.textContent = '';
+    }
+
+    function updateProgressBar() {
+        const progress = ((currentQuestionIndex) / quizData.length) * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+
+    function showResults() {
+        quizArea.style.display = 'none';
+        resultsArea.style.display = 'block';
+        finalScoreElement.textContent = `${score} / ${quizData.length}`;
+        progressBar.style.width = '100%';
+
+        let title = '';
+        let comment = '';
+
+        if (score >= 18) {
+            title = "雷達狀態：【完美清晰 - 命運航海王】";
+            comment = "太驚人了！你的雷達已經完全修復，雜訊全無。你已經掌握了拿回人生主導權的核心技術。保持這種覺知，騙子與厄運看到你都要繞道而行。去吧，設計你那好三倍的人生！";
+        } else if (score >= 14) {
+            title = "雷達狀態：【訊號穩定 - 熟練的大副】";
+            comment = "做得很好！你已經掌握了核心技巧，能避開大部分的思維陷阱。雷達雖然偶有雜訊，但大方向已經清晰。只要持續練習「每日改寫一個問題」，很快就能獨當一面。";
+        } else if (score >= 8) {
+             title = "雷達狀態：【雜訊干擾 - 見習水手】";
+             comment = "辛苦了。你的雷達雖然啟動了，但雜訊還是很多，容易被舊習慣和情緒干擾。別氣餒，意識到問題就是改變的開始。這篇文章多讀幾次，把錯誤的題目再看一遍，別放棄你的雷達！";
+        } else {
+            title = "雷達狀態：【嚴重故障 - 迷航中的肥羊】";
+            comment = "老師嘆了一口氣。你的雷達幾乎是關閉狀態，依然習慣當伸手牌。現在的你，在險惡的商業世界裡非常危險。請務必把「禁止問是非題」和「五個為什麼」這兩章重新精讀十遍。重新來過吧！";
+        }
+
+        finalTitleElement.textContent = title;
+        finalCommentElement.textContent = comment;
+        radarNoise.style.opacity = (1 - (score / quizData.length));
+    }
+
+    nextBtn.addEventListener('click', () => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    });
+
+    restartBtn.addEventListener('click', () => {
+        currentQuestionIndex = 0;
+        score = 0;
+        radarHealth = 100;
+        radarNoise.style.opacity = 1;
+        quizArea.style.display = 'block';
+        resultsArea.style.display = 'none';
+        loadQuestion();
+    });
+
+    loadQuestion();
+</script>
+</body>
+</html>
